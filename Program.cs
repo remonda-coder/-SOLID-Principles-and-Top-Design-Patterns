@@ -3,91 +3,110 @@ using System;
 
 public class HelloWorld
 {
-   public static void Main(string[] args)
-   {
-       string sharedFile = "logs.txt";
-       File.WriteAllText(sharedFile, "--- LOG START ---\n");
+    public static void Main(string[] args)
+    {
+        Console.WriteLine("--- 1. SpaceShip Simple Factory ---");
 
-       Console.WriteLine("=== TESTING EAGER LOGGER ===");
+        ISpaceShipSimpleFactory factory = new SpaceShipSimpleFactory();
         
-        
-       EagerFileLogger eager = EagerFileLogger.Instance;
-        
-       
-       eager.Log("System booting up.");
-        
-  
-       Console.WriteLine(eager.ReadLogs());
+        ISpaceShip ship1 = factory.CreateSpaceShip(ShipType.MillenniumFalcon);
+        Console.WriteLine($"Created: {ship1.displayName}");
 
+        ISpaceShip ship2 = factory.CreateSpaceShip(ShipType.Serenity);
+        Console.WriteLine($"Created: {ship2.displayName}");
 
-       Console.WriteLine("\n=== TESTING LAZY LOGGER ===");
-        
-        
-       LazyFileLogger lazy = LazyFileLogger.Instance;
-        
-      
-       lazy.Log("User logged in.");
-        
-      
-       Console.WriteLine(lazy.ReadLogs());
-        
-        
-       Console.WriteLine("\n=== TESTING SINGLETON BEHAVIOR ===");
-       
-       var eager2 = EagerFileLogger.Instance;
-       bool isSame = ReferenceEquals(eager, eager2);
-       Console.WriteLine($"Is eager instance 1 same as instance 2? {isSame}"); // True
-   }
-   public class EagerFileLogger{
-       private static readonly EagerFileLogger _instance=new();
-       private string _filePath = "logs.txt";
+        Console.WriteLine("\n--- 2. Using Factory Method ---");
+        ISpaceShipFactory Falconfactory =new MilleniumFalconFactory();
+        ISpaceShip MyFalcon=Falconfactory.CreateSpaceShip(ShipType.MillenniumFalcon);
+        Console.WriteLine($"Created via Factory Method: {MyFalcon.displayName}");
 
-       private EagerFileLogger(){}
-       public static EagerFileLogger Instance{
-           get{
-               return _instance;
-           }
-       }
+        // If we want Serenity, we switch to the SerenityFactory.
+        ISpaceShipFactory serenityFactory = new SerenityFactory();
+        ISpaceShip mySerenity = serenityFactory.CreateSpaceShip(ShipType.Serenity);
+        Console.WriteLine($"Created via Factory Method: {mySerenity.displayName}");
+    }
+    //enum 
+    public enum ShipType
+    {
+       MillenniumFalcon,
+        Serenity,
+        NullShip 
+    }
+    //interface
+    public interface ISpaceShip
+    {
+        public int position { get; set; }
+        public int size { get; set; }
+        public string displayName { get; set; }
+        public int speed { get; set; }
+    }
 
-       public void Log(string message){
-           string timestamp = DateTime.Now.ToString("HH:mm:ss");
-       string fullMessage = $"[{timestamp}] EAGER:  {message}\n";
-        
-       File.AppendAllText(_filePath, fullMessage);
-       }
-
-       public string ReadLogs(){
-           if(File.Exists(_filePath))
-               return File.ReadAllText(_filePath);
-           return "File not found.";
-       }
-        
-   }
-   public class LazyFileLogger{
-       private static LazyFileLogger _instance;
-       private string _filePath = "logs.txt";
-       private LazyFileLogger(){}
-       public static LazyFileLogger Instance{
-           get{
-               if(_instance==null)
-                   _instance=new();
-               return _instance;
-           }
-       }
-        
-       public void Log(string message){
-           string timestamp = DateTime.Now.ToString("HH:mm:ss");
-       string fullMessage = $"[{timestamp}] LAZY:  {message}\n";
-        
-       File.AppendAllText(_filePath, fullMessage);
-       }
-
-       public string ReadLogs(){
-           if(File.Exists(_filePath))
-               return File.ReadAllText(_filePath);
-           return "File not found.";
-       }
-   }
+    //concrete
+    public class MilleniumFalcon : ISpaceShip
+    {
+        public int position { get; set; } = 20;
+        public int size { get; set; } = 300;
+        public string displayName { get; set; } = "Millennium Falcon";
+        public int speed { get; set; } = 1000;
+    }
+    public class Serenity : ISpaceShip
+    {
+        public int position { get; set; } = 35;
+        public int size { get; set; } = 200;
+        public string displayName { get; set; } = "Serenity";
+        public int speed { get; set; } = 400;
+    }
+    public class NullShip : ISpaceShip
+    {
+        public int position { get; set; } = 0;
+        public int size { get; set; } = 0;
+        public string displayName { get; set; } = "";
+        public int speed { get; set; } = 0;
+    }
+    //simple factory interface
+    public interface ISpaceShipSimpleFactory
+    {
+        ISpaceShip CreateSpaceShip(ShipType type);
+    }
+    //simple factory concrete
+    public class SpaceShipSimpleFactory : ISpaceShipSimpleFactory
+    {
+        public ISpaceShip CreateSpaceShip(ShipType type)
+        {
+            switch(type)
+            {
+                case ShipType.MillenniumFalcon:
+                    return new MilleniumFalcon();
+                case ShipType.Serenity:
+                    return new Serenity();
+                case ShipType.NullShip:
+                    return  new NullShip();
+                default:
+                    throw new ArgumentException("Ship logic not implemented yet for this type.");
+            }
+            
+        }
+    }
+    // factory interface
+    public interface ISpaceShipFactory
+    {
+        ISpaceShip CreateSpaceShip(ShipType type);
+    }
+    // factory concrete 3 classes
+    public class MilleniumFalconFactory : ISpaceShipFactory
+    {
+        public ISpaceShip CreateSpaceShip(ShipType type)
+        {
+            return new MilleniumFalcon();
+        }
+    }
+    public class SerenityFactory : ISpaceShipFactory
+    {
+        public ISpaceShip CreateSpaceShip(ShipType type)
+        {
+            return new Serenity();
+        }
+    }
 }
 
 
