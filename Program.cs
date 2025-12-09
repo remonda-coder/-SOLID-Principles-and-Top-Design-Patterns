@@ -5,81 +5,85 @@ public class HelloWorld
 {
     public static void Main(string[] args)
     {
-        Console.WriteLine("--- Builder Pattern Test ---");
+        Console.WriteLine("--- Structural Adapter Test ---");
 
-        UserBuilder builder = new UserBuilder("John", "Doe");
+        LegacyRectangle legacyItem = new LegacyRectangle(10, 10, 20, 10);
 
-        User user1 = builder
-                        .WithAge(30)
-                        .WithEmail("john@example.com")
-                        .Build();
+        IRectangle adapter = new LegacyRectangleAdapter(legacyItem);
 
-        Console.WriteLine(user1.ToString());
-
-        User user2 = new UserBuilder("Jane", "Smith")
-                        .WithAddress("123 Main St")
-                        .Build();
-
-        Console.WriteLine(user2.ToString());
+        Console.WriteLine($"Legacy X: {legacyItem.x} | Legacy W: {legacyItem.w}");
+        
+        Console.WriteLine("--- ADAPTED VALUES ---");
+        Console.WriteLine($"Adapted x1: {adapter.x1}"); 
+        Console.WriteLine($"Adapted y1: {adapter.y1}"); 
+        Console.WriteLine($"Adapted x2: {adapter.x2}"); 
+        Console.WriteLine($"Adapted y2: {adapter.y2}"); 
     }
-    public class User
+    //interface 
+    public interface IRectangle
     {
-        //required and immutable
-        public string FirstName{get;}
-        public string LastName{get;}
-        // not required and immutable
-        public int? Age{get;}
-        public string? Address{get;}
-        public string? EmailAddress{get;}
-        public User (string firstName,string lastName,int? age,string? address,string? emailAddress)
+        int x1 { get; set; }
+        int y1 { get; set; }
+        int x2 { get; set; }
+        int y2 { get; set; }
+    }
+    //class need to adapt 
+    public class LegacyRectangle
+    {
+        public int x {get;set;}
+        public int y {get;set;}
+        public int w {get;set;}
+        public int h {get;set;}
+        public LegacyRectangle(int x,int y, int w, int h)
         {
-             FirstName=firstName;
-             LastName=lastName;
-             Age=age;
-             Address=address;
-             EmailAddress=emailAddress;
-        }
-        public override string ToString()
-        {
-            return $"User: {FirstName} {LastName} | Age: {Age?.ToString() ?? "N/A"} | Email: {EmailAddress ?? "N/A"} | Address: {Address ?? "N/A"}";
+            this.x=x;
+            this.y=y;
+            this.w=w;
+            this.h=h;
         }
     }
-    public class UserBuilder
+    public class NewRectangle:IRectangle
     {
-        private string _firstName;
-        private string _lastName;
-        private int? _age;
-        private string? _address;
-        private string? _emailAddress;
-        public UserBuilder(string firstName,string lastName)
+        public int x1 {get;set;}
+        public int y1 {get;set;}
+        public int x2 {get;set;}
+        public int y2 {get;set;}
+        public NewRectangle(int x1,int y1, int x2, int y2)
         {
-            if(string.IsNullOrWhiteSpace(firstName)|| string.IsNullOrWhiteSpace(lastName))
-            {
-                throw new ArgumentException("First and Last Name are required!");
-            }    
-            _firstName=firstName;
-            _lastName=lastName;
+            this.x1=x1;
+            this.y1=y1;
+            this.x2=x2;
+            this.y2=y2;
         }
-        public UserBuilder WithAge(int age)
+    }
+    public class LegacyRectangleAdapter : IRectangle
+    {
+        private readonly LegacyRectangle _legacy;
+        public LegacyRectangleAdapter(LegacyRectangle legacy)
         {
-            _age=age;
-            return this;
+            _legacy=legacy;
         }
-        public UserBuilder WithAddress(string address)
+        public int x1
         {
-            _address = address;
-            return this;
+            get => _legacy.x;
+            set => _legacy.x=value;
         }
-        public UserBuilder WithEmail(string email)
+        public int y1
         {
-            _emailAddress = email;
-            return this;
+            get => _legacy.y;
+            set => _legacy.y=value;
         }
-        public User Build()
+        public int x2
         {
-            return new User(_firstName, _lastName, _age, _address, _emailAddress);
+            get => _legacy.x + _legacy.w;
+            set => _legacy.w=value-_legacy.x;
         }
-    }   
+        public int y2
+        {
+            get => _legacy.y+ _legacy.h;
+            set => _legacy.h=value-_legacy.y;
+        }
+    }
 }
 
 
