@@ -1,73 +1,93 @@
-﻿// Online C# Editor for free
-// Write, Edit and Run your C# code using C# Online Compiler
-
+﻿using System.Text;
 using System;
 
-namespace SingletonDemo
+public class HelloWorld
 {
-    class Program
-    {
-        static void Main(string[] args)
-        {
-        Console.WriteLine("--- Testing EAGER Singleton ---");
+   public static void Main(string[] args)
+   {
+       string sharedFile = "logs.txt";
+       File.WriteAllText(sharedFile, "--- LOG START ---\n");
+
+       Console.WriteLine("=== TESTING EAGER LOGGER ===");
         
-        // 1. Get the instance 
-        // (Matching the class name defined below)
-        var eager1 = NumberGeneratorEagerInstanciation.Instance;
-        var eager2 = NumberGeneratorEagerInstanciation.Instance;
-
-        // 2. Prove state is shared
-        // (Fixed method casing to GetNextNumber)
-        Console.WriteLine($"Eager Client 1 gets: {eager1.GetNextNumber()}"); 
-        Console.WriteLine($"Eager Client 2 gets: {eager2.GetNextNumber()}"); 
-
-        // 3. Prove they are literally the same object in memory
-        bool isSameEager = ReferenceEquals(eager1, eager2);
-        Console.WriteLine($"Are eager1 and eager2 the same object? {isSameEager}"); 
-
-
-        Console.WriteLine("\n--- Testing LAZY Singleton ---");
-
-        // 1. Get the instance
-        var lazy1 = NumberGeneratorLazyInstanciation.Instance;
-        var lazy2 = NumberGeneratorLazyInstanciation.Instance;
-
-        // 2. Prove state is shared
-        Console.WriteLine($"Lazy Client 1 gets: {lazy1.GetNextNumber()}"); 
-        Console.WriteLine($"Lazy Client 2 gets: {lazy2.GetNextNumber()}"); 
         
-        // 3. Prove they are the same object
-        bool isSameLazy = ReferenceEquals(lazy1, lazy2);
-        Console.WriteLine($"Are lazy1 and lazy2 the same object? {isSameLazy}");
-    }
-    }
-    public class NumberGeneratorEagerInstanciation{
-        private  static readonly NumberGeneratorEagerInstanciation _instance =new();
-        private int number=1;
+       EagerFileLogger eager = EagerFileLogger.Instance;
+        
        
-        private NumberGeneratorEagerInstanciation(){}
-        public static NumberGeneratorEagerInstanciation Instance{
-            get{
-                return _instance;
-            }
-        }
-        public int GetNextNumber(){
-            return number++;
-        }
-    }
-    public class NumberGeneratorLazyInstanciation{
-        private static  NumberGeneratorLazyInstanciation _instance;
-        private int number=1;
-        private NumberGeneratorLazyInstanciation(){}
-        public static NumberGeneratorLazyInstanciation Instance{
-            get{
-                if(_instance == null)
-                    _instance =new();
-                return _instance;
-            }
-        }
-        public int GetNextNumber(){
-            return number++;
-        }
-    }
+       eager.Log("System booting up.");
+        
+  
+       Console.WriteLine(eager.ReadLogs());
+
+
+       Console.WriteLine("\n=== TESTING LAZY LOGGER ===");
+        
+        
+       LazyFileLogger lazy = LazyFileLogger.Instance;
+        
+      
+       lazy.Log("User logged in.");
+        
+      
+       Console.WriteLine(lazy.ReadLogs());
+        
+        
+       Console.WriteLine("\n=== TESTING SINGLETON BEHAVIOR ===");
+       
+       var eager2 = EagerFileLogger.Instance;
+       bool isSame = ReferenceEquals(eager, eager2);
+       Console.WriteLine($"Is eager instance 1 same as instance 2? {isSame}"); // True
+   }
+   public class EagerFileLogger{
+       private static readonly EagerFileLogger _instance=new();
+       private string _filePath = "logs.txt";
+
+       private EagerFileLogger(){}
+       public static EagerFileLogger Instance{
+           get{
+               return _instance;
+           }
+       }
+
+       public void Log(string message){
+           string timestamp = DateTime.Now.ToString("HH:mm:ss");
+       string fullMessage = $"[{timestamp}] EAGER:  {message}\n";
+        
+       File.AppendAllText(_filePath, fullMessage);
+       }
+
+       public string ReadLogs(){
+           if(File.Exists(_filePath))
+               return File.ReadAllText(_filePath);
+           return "File not found.";
+       }
+        
+   }
+   public class LazyFileLogger{
+       private static LazyFileLogger _instance;
+       private string _filePath = "logs.txt";
+       private LazyFileLogger(){}
+       public static LazyFileLogger Instance{
+           get{
+               if(_instance==null)
+                   _instance=new();
+               return _instance;
+           }
+       }
+        
+       public void Log(string message){
+           string timestamp = DateTime.Now.ToString("HH:mm:ss");
+       string fullMessage = $"[{timestamp}] LAZY:  {message}\n";
+        
+       File.AppendAllText(_filePath, fullMessage);
+       }
+
+       public string ReadLogs(){
+           if(File.Exists(_filePath))
+               return File.ReadAllText(_filePath);
+           return "File not found.";
+       }
+   }
 }
+
+
