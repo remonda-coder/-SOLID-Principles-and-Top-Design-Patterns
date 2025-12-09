@@ -5,108 +5,82 @@ public class HelloWorld
 {
     public static void Main(string[] args)
     {
-        Console.WriteLine("--- 1. SpaceShip Simple Factory ---");
+        Console.WriteLine("--- Builder Pattern Test ---");
 
-        ISpaceShipSimpleFactory factory = new SpaceShipSimpleFactory();
-        
-        ISpaceShip ship1 = factory.CreateSpaceShip(ShipType.MillenniumFalcon);
-        Console.WriteLine($"Created: {ship1.displayName}");
+        UserBuilder builder = new UserBuilder("John", "Doe");
 
-        ISpaceShip ship2 = factory.CreateSpaceShip(ShipType.Serenity);
-        Console.WriteLine($"Created: {ship2.displayName}");
+        User user1 = builder
+                        .WithAge(30)
+                        .WithEmail("john@example.com")
+                        .Build();
 
-        Console.WriteLine("\n--- 2. Using Factory Method ---");
-        ISpaceShipFactory Falconfactory =new MilleniumFalconFactory();
-        ISpaceShip MyFalcon=Falconfactory.CreateSpaceShip(ShipType.MillenniumFalcon);
-        Console.WriteLine($"Created via Factory Method: {MyFalcon.displayName}");
+        Console.WriteLine(user1.ToString());
 
-        // If we want Serenity, we switch to the SerenityFactory.
-        ISpaceShipFactory serenityFactory = new SerenityFactory();
-        ISpaceShip mySerenity = serenityFactory.CreateSpaceShip(ShipType.Serenity);
-        Console.WriteLine($"Created via Factory Method: {mySerenity.displayName}");
-    }
-    //enum 
-    public enum ShipType
-    {
-       MillenniumFalcon,
-        Serenity,
-        NullShip 
-    }
-    //interface
-    public interface ISpaceShip
-    {
-        public int position { get; set; }
-        public int size { get; set; }
-        public string displayName { get; set; }
-        public int speed { get; set; }
-    }
+        User user2 = new UserBuilder("Jane", "Smith")
+                        .WithAddress("123 Main St")
+                        .Build();
 
-    //concrete
-    public class MilleniumFalcon : ISpaceShip
-    {
-        public int position { get; set; } = 20;
-        public int size { get; set; } = 300;
-        public string displayName { get; set; } = "Millennium Falcon";
-        public int speed { get; set; } = 1000;
+        Console.WriteLine(user2.ToString());
     }
-    public class Serenity : ISpaceShip
+    public class User
     {
-        public int position { get; set; } = 35;
-        public int size { get; set; } = 200;
-        public string displayName { get; set; } = "Serenity";
-        public int speed { get; set; } = 400;
-    }
-    public class NullShip : ISpaceShip
-    {
-        public int position { get; set; } = 0;
-        public int size { get; set; } = 0;
-        public string displayName { get; set; } = "";
-        public int speed { get; set; } = 0;
-    }
-    //simple factory interface
-    public interface ISpaceShipSimpleFactory
-    {
-        ISpaceShip CreateSpaceShip(ShipType type);
-    }
-    //simple factory concrete
-    public class SpaceShipSimpleFactory : ISpaceShipSimpleFactory
-    {
-        public ISpaceShip CreateSpaceShip(ShipType type)
+        //required and immutable
+        public string FirstName{get;}
+        public string LastName{get;}
+        // not required and immutable
+        public int? Age{get;}
+        public string? Address{get;}
+        public string? EmailAddress{get;}
+        public User (string firstName,string lastName,int? age,string? address,string? emailAddress)
         {
-            switch(type)
+             FirstName=firstName;
+             LastName=lastName;
+             Age=age;
+             Address=address;
+             EmailAddress=emailAddress;
+        }
+        public override string ToString()
+        {
+            return $"User: {FirstName} {LastName} | Age: {Age?.ToString() ?? "N/A"} | Email: {EmailAddress ?? "N/A"} | Address: {Address ?? "N/A"}";
+        }
+    }
+    public class UserBuilder
+    {
+        private string _firstName;
+        private string _lastName;
+        private int? _age;
+        private string? _address;
+        private string? _emailAddress;
+        public UserBuilder(string firstName,string lastName)
+        {
+            if(string.IsNullOrWhiteSpace(firstName)|| string.IsNullOrWhiteSpace(lastName))
             {
-                case ShipType.MillenniumFalcon:
-                    return new MilleniumFalcon();
-                case ShipType.Serenity:
-                    return new Serenity();
-                case ShipType.NullShip:
-                    return  new NullShip();
-                default:
-                    throw new ArgumentException("Ship logic not implemented yet for this type.");
-            }
-            
+                throw new ArgumentException("First and Last Name are required!");
+            }    
+            _firstName=firstName;
+            _lastName=lastName;
         }
-    }
-    // factory interface
-    public interface ISpaceShipFactory
-    {
-        ISpaceShip CreateSpaceShip(ShipType type);
-    }
-    // factory concrete 3 classes
-    public class MilleniumFalconFactory : ISpaceShipFactory
-    {
-        public ISpaceShip CreateSpaceShip(ShipType type)
+        public UserBuilder WithAge(int age)
         {
-            return new MilleniumFalcon();
+            _age=age;
+            return this;
         }
-    }
-    public class SerenityFactory : ISpaceShipFactory
-    {
-        public ISpaceShip CreateSpaceShip(ShipType type)
+        public UserBuilder WithAddress(string address)
         {
-            return new Serenity();
+            _address = address;
+            return this;
         }
-    }
+        public UserBuilder WithEmail(string email)
+        {
+            _emailAddress = email;
+            return this;
+        }
+        public User Build()
+        {
+            return new User(_firstName, _lastName, _age, _address, _emailAddress);
+        }
+    }   
 }
+
 
 
