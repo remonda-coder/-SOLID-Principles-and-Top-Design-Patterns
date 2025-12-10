@@ -5,138 +5,108 @@ public class HelloWorld
 {
     public static void Main(string[] args)
     {
-        Console.WriteLine("--- Strategy Validation Test ---");
+        Console.WriteLine("--- Media Player State Pattern ---");
 
-        Address dummyAddr = new Address();
+        Player player = new Player();
 
-        Order validOrder = new Order(
-            ShippingOptions.ups, 
-            dummyAddr, 
-            dummyAddr, 
-            new ShippingCostStrategyForUPS()
-        );
+        player.PressPause(); 
 
-        Console.WriteLine($"Valid Order Cost: {validOrder.cost}"); 
+        player.PressPlay();
 
-        Order invalidOrder = new Order(
-            ShippingOptions.fedex, 
-            dummyAddr, 
-            dummyAddr, 
-            new ShippingCostStrategyForUPS()
-        );
+        player.PressPause();
 
-        try
+        player.PressPlay();
+
+        player.PressStop();
+    }
+    public class Player
+    {
+        private IPlayerState _state;
+        public Player()
         {
-            Console.WriteLine($"Invalid Order Cost: {invalidOrder.cost}");
+            _state = new StoppedState();
         }
-        catch (Exception ex)
+        public void SetState(IPlayerState state)
         {
-            Console.WriteLine("\n[Error Caught]: " + ex.Message);
+            _state = state;
+        }
+        public void PressPlay()
+        {
+            _state.Play(this);
+        }
+
+        public void PressPause()
+        {
+            _state.Pause(this);
+        }
+
+        public void PressStop()
+        {
+            _state.Stop(this);
         }
     }
-  //shipping class -change method -change the cost-each ethod has it's own strategy for cost 
-  //adress - shipping options -order(get )
-  public class Address
-{
-    public string? ContactName { get; set; }
-    public string? AddressLine { get; set; }
-    public string? City { get; set; }
-    public string? Region { get; set; }
-    public string? Country { get; set; }
-    public string? PostalCode { get; set; }
-}
-    public enum ShippingOptions
+    public interface IPlayerState
     {
-        ups,
-        fedex,
-        purulator
+        void Play(Player player);
+        void Pause(Player player);
+        void Stop(Player player);
     }
-    public class Order
+    public class StoppedState : IPlayerState
     {
-        public ShippingOptions _shippingMethod;
-        public Address _destination;
-        public Address _origin;
-        public IShippingCostStrategy _costStrategy;
-        public Order(ShippingOptions shippingMethod,Address destination,Address origin,IShippingCostStrategy costStrategy)
+        public void Play(Player player)
         {
-            _shippingMethod=shippingMethod;
-            _destination=destination;
-            _origin=origin;
-            _costStrategy=costStrategy;
+            Console.WriteLine("Starting Player...");
+            player.SetState(new PlayingState());
         }
-        public ShippingOptions ShippingOptions
-        {
-            get
-            {
-                return _shippingMethod;
-            }
-        }
-        public Address Origin
-        {
-            get
-            {
-                return _origin;
-            }
-        }
-        public Address Destination
-        {
-            get
-            {
-                return _destination;
-            }
-        }
-        public Double cost
-        {
-            get
-            {
-                return _costStrategy.CalcShippingCost(this);
-            }
-        }
-    }
-    public interface IShippingCostStrategy
-    {
-        public double CalcShippingCost(Order order);
-    }
-    public class ShippingCostStrategyForUPS : IShippingCostStrategy
-    {
-        public double CalcShippingCost(Order order)
-        {
-            if (order.ShippingOptions != ShippingOptions.ups)
-            {
-                throw new InvalidOperationException("Strategy Mismatch: You selected UPS Strategy, but the Order is marked as " + order.ShippingOptions);
-            }
-            
-            return 7.25;
-        }
-    }
-    public class ShippingCostStrategyForFedEX : IShippingCostStrategy
-    {
-        public double CalcShippingCost(Order order)
-        {
-            // CHECK
-            if (order.ShippingOptions != ShippingOptions.fedex)
-            {
-                throw new InvalidOperationException("Strategy Mismatch: You selected FedEx Strategy, but the Order is marked as " + order.ShippingOptions);
-            }
 
-            return 9.25;
+        public void Pause(Player player)
+        {
+            Console.WriteLine("Error: Cannot pause. Player is currently stopped.");
+        }
+
+        public void Stop(Player player)
+        {
+            Console.WriteLine("Error: Already stopped.");
         }
     }
-
-    public class ShippingCostStrategyForPurulator : IShippingCostStrategy
+    public class PlayingState : IPlayerState
     {
-        public double CalcShippingCost(Order order)
+        public void Play(Player player)
         {
-            // CHECK
-            if (order.ShippingOptions != ShippingOptions.purulator)
-            {
-                throw new InvalidOperationException("Strategy Mismatch: You selected Purulator Strategy, but the Order is marked as " + order.ShippingOptions);
-            }
+            Console.WriteLine("Error: Already playing.");
+        }
 
-            return 5.00;
+        public void Pause(Player player)
+        {
+            Console.WriteLine("Pausing ...");
+            player.SetState(new PausedState());
+        }
+
+        public void Stop(Player player)
+        {
+            Console.WriteLine("Stopping ...");
+            player.SetState(new StoppedState());
+        }
+    }
+    public class PausedState : IPlayerState
+    {
+        public void Play(Player player)
+        {
+            Console.WriteLine("Resuming ...");
+            player.SetState(new PlayingState());
+        }
+
+        public void Pause(Player player)
+        {
+            Console.WriteLine("Error: Already paused.");
+        }
+
+        public void Stop(Player player)
+        {
+            Console.WriteLine("Stopping from pause...");
+            player.SetState(new StoppedState());
         }
     }
 }
-
 
 
